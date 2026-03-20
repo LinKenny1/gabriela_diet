@@ -1,0 +1,12 @@
+{
+  "name": "gabi-bariatrica",
+  "version": "1.0.0",
+  "description": "App de seguimiento nutricional para cirugía bariátrica de Gabriela",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve public -l 3000",
+    "deploy": "netlify deploy --dir=public --prod"
+  },
+  "keywords": ["bariatric", "nutrition", "tracking", "pwa"],
+  "author": "Con amor para Gabriela 🫶"
+}

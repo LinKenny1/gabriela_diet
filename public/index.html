@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#7F77DD">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gabi">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫶</text></svg>">
+<title>Gabi — Seguimiento Bariátrico</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'Outfit',sans-serif;background:#FAFAF8;color:#333;overscroll-behavior:none;min-height:100dvh}
+body{padding:0 0 80px 0}
+.app{max-width:520px;margin:0 auto;padding:12px 16px}
+.mono{font-family:'JetBrains Mono',monospace}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#FFF;border-top:1px solid #EEEEE8;display:flex;z-index:100;padding:6px 0;padding-bottom:max(6px,env(safe-area-inset-bottom))}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border:none;background:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:10px;color:#999;transition:color 0.15s}
+.nav-btn.active{color:#7F77DD}
+.nav-icon{font-size:20px;line-height:1}
+.card{background:#FFF;border-radius:14px;border:1px solid #EEEEE8;padding:16px;margin-bottom:12px}
+.card-flat{background:#FAFAF8;border-radius:12px;border:1px solid #EEEEE8;padding:14px 16px}
+.phase-banner{border-radius:14px;padding:16px 20px;margin-bottom:16px}
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;margin-bottom:6px;border-radius:12px;border:1px solid #EEEEE8;cursor:pointer;background:#FFF;transition:all 0.2s;-webkit-user-select:none;user-select:none}
+.check-item.done{background:#E1F5EE;border-color:#1D9E7533;opacity:0.7}
+.checkbox{width:22px;height:22px;border-radius:6px;border:2px solid #CCC;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all 0.15s}
+.check-item.done .checkbox{background:#1D9E75;border-color:#1D9E75}
+.hyd-btn{padding:8px 14px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;border:1.5px solid #E0E0E0;cursor:pointer;background:#FFF;color:#999;transition:all 0.15s}
+.hyd-btn.done{background:#E6F1FB;border-color:#378ADD;color:#185FA5}
+.cal-row{display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:4px;border-radius:10px;border:1px solid #EEEEE8;background:#FFF;cursor:pointer;transition:all 0.15s}
+.cal-row.today{border-width:2px}
+.recipe-card{background:#FFF;border-radius:14px;border:1px solid #EEEEE8;overflow:hidden;margin-bottom:12px;cursor:pointer;transition:all 0.15s}
+.recipe-card:active{transform:scale(0.98)}
+.recipe-header{padding:16px;display:flex;align-items:center;gap:12px}
+.recipe-body{padding:0 16px 16px;display:none}
+.recipe-card.open .recipe-body{display:block}
+.shop-section{margin-bottom:16px}
+.shop-header{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #EEEEE8;margin-bottom:6px}
+.shop-item{display:flex;align-items:center;gap:10px;padding:8px 4px 8px 8px;cursor:pointer;border-radius:8px;font-size:13px;transition:background 0.1s}
+.shop-item:active{background:#F5F5F3}
+.shop-item.done span.item-name{text-decoration:line-through;color:#BBB}
+.tag{font-size:10px;padding:2px 6px;border-radius:6px;white-space:nowrap}
+.tag-pre{background:#EEEDFE;color:#534AB7}
+.tag-post{background:#E1F5EE;color:#0F6E56}
+.tag-both{background:#FAEEDA;color:#854F0B}
+.prog-bar{height:4px;background:#EEEEE8;border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width 0.3s}
+.setup{text-align:center;padding:3rem 1rem}
+.setup input[type=date]{width:100%;padding:12px 14px;font-size:16px;font-family:'Outfit',sans-serif;border:1.5px solid #DDD;border-radius:10px;outline:none;background:#FFF;margin-bottom:16px}
+.btn-primary{width:100%;padding:14px;font-size:15px;font-weight:600;font-family:'Outfit',sans-serif;border:none;border-radius:10px;background:#7F77DD;color:#FFF;cursor:pointer}
+.btn-primary:disabled{background:#CCC;cursor:default}
+.btn-primary:active:not(:disabled){transform:scale(0.98)}
+.sched-row{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:3px;border-radius:8px}
+.sched-row.now{background:#EEEDFE}
+.sched-row.past{opacity:0.5}
+.step{padding:12px 0;border-bottom:1px solid #F5F5F3}
+.step:last-child{border:none}
+.step-num{width:24px;height:24px;border-radius:50%;background:#EEEDFE;color:#534AB7;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;flex-shrink:0}
+.ing{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F5F5F3;font-size:13px}
+.ing:last-child{border:none}
+.section-title{font-size:14px;font-weight:600;color:#555;margin-bottom:10px}
+.app{-webkit-overflow-scrolling:touch}
+@media(prefers-color-scheme:dark){
+html,body{background:#1a1a1a;color:#e0e0e0}
+.card,.check-item,.recipe-card,.cal-row,.shop-item{background:#242424;border-color:#333}
+.card-flat{background:#1e1e1e;border-color:#333}
+.bottom-nav{background:#1a1a1a;border-color:#333}
+.phase-banner{border-color:transparent !important}
+.setup input[type=date]{background:#242424;border-color:#444;color:#e0e0e0}
+.hyd-btn{background:#242424;border-color:#444;color:#888}
+.hyd-btn.done{background:#0C447C;border-color:#378ADD;color:#B5D4F4}
+.check-item.done{background:#085041;border-color:#1D9E7533}
+textarea{background:#242424 !important;border-color:#444 !important;color:#e0e0e0 !important}
+.prog-bar{background:#333}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useRef}=React;
+const PHASES={PRE:"pre",SURGERY:"surgery",POST1:"post1",POST2:"post2",DONE:"done",FUTURE:"future"};
+const PHASE_META={
+[PHASES.PRE]:{label:"Preoperatorio",color:"#7F77DD",bg:"#EEEDFE",dark:"#3C3489",emoji:"🍲",desc:"Dieta de papilla rica en proteínas. Objetivo: reducir el hígado graso."},
+[PHASES.SURGERY]:{label:"Cirugía",color:"#E24B4A",bg:"#FCEBEB",dark:"#791F1F",emoji:"🏥",desc:"Seguir instrucciones del equipo quirúrgico."},
+[PHASES.POST1]:{label:"Post-op Fase 1",color:"#1D9E75",bg:"#E1F5EE",dark:"#085041",emoji:"💧",desc:"Solo líquidos claros: té, jaleas sin azúcar, consomé colado. Máx 100-150cc."},
+[PHASES.POST2]:{label:"Post-op Fase 2",color:"#378ADD",bg:"#E6F1FB",dark:"#0C447C",emoji:"🥛",desc:"Lácteos descremados sin lactosa + batido proteico. Consomé en almuerzo y cena."},
+[PHASES.DONE]:{label:"Completado",color:"#639922",bg:"#EAF3DE",dark:"#27500A",emoji:"✅",desc:"Régimen líquido completado. Consultar nutricionista para siguiente etapa."},
+[PHASES.FUTURE]:{label:"Próximamente",color:"#888780",bg:"#F1EFE8",dark:"#444441",emoji:"📅",desc:""},
+};
+const PRE_MEALS=[
+{time:"08:00",name:"Desayuno",desc:"Yoghurt/Leche Protein + huevo o quesillo (80g)"},
+{time:"10:30",name:"Colación AM",desc:"Batido proteico o 2 jaleas proteicas"},
+{time:"13:00",name:"Almuerzo",desc:"Papilla 200-250cc (proteína + verduras + caldo)"},
+{time:"16:00",name:"Once",desc:"Compota de fruta licuada + jalea proteica"},
+{time:"19:00",name:"Cena",desc:"Papilla 200-250cc (similar al almuerzo)"},
+{time:"21:30",name:"Colación PM",desc:"Yoghurt / Leche / Jalea Protein"},
+];
+const POST1_MEALS=[
+{time:"08:00",name:"Desayuno",desc:"100cc Té clarito (NO cargado)"},
+{time:"10:00",name:"Colación",desc:"100cc Jalea sin azúcar"},
+{time:"12:00",name:"Colación",desc:"100cc Té de hierbas"},
+{time:"14:00",name:"Almuerzo",desc:"100-150cc Consomé filtrado"},
+{time:"16:00",name:"Colación",desc:"100cc Jalea sin azúcar"},
+{time:"18:00",name:"Once",desc:"100cc Té clarito"},
+{time:"20:00",name:"Cena",desc:"100-150cc Consomé filtrado"},
+{time:"22:00",name:"Colación nocturna",desc:"100cc Jalea sin azúcar"},
+];
+const POST2_MEALS=[
+{time:"08:00",name:"Desayuno",desc:"100-150cc Leche descremada sin lactosa Protein"},
+{time:"10:00",name:"Colación",desc:"100cc Batido proteico (½ scoop)"},
+{time:"12:00",name:"Colación",desc:"100cc Leche descremada sin lactosa Protein"},
+{time:"14:00",name:"Almuerzo",desc:"100-150cc Consomé filtrado"},
+{time:"16:00",name:"Colación",desc:"100-150cc Shot o Leche Protein"},
+{time:"18:00",name:"Once",desc:"100-150cc Leche descremada sin lactosa Protein"},
+{time:"20:00",name:"Cena",desc:"100-150cc Consomé filtrado"},
+{time:"22:00",name:"Colación nocturna",desc:"100cc Batido proteico (½ scoop)"},
+];
+const HYD_TIMES=["09:00","11:00","13:00","15:00","17:00","19:00","21:00"];
+const RECIPES=[
+{id:"papilla-pollo",title:"Papilla de pollo con verduras",tag:"Pre-op",tagClass:"tag-pre",emoji:"🍗",
+desc:"Base del almuerzo y cena preoperatoria",
+ings:["100g pechuga de pollo","50g zanahoria","50g zapallo italiano","50g espinaca","200ml agua o caldo","Sal y orégano a gusto"],
+steps:["Pelar y cortar zanahoria en rodajas finas, zapallo en cubos, lavar espinaca.","Poner el pollo en la olla con el agua. Hervir y cocinar a fuego medio por 15 min.","Agregar las verduras. Cocinar 10 min más hasta que todo esté blando.","Licuar todo junto con parte del caldo. Debe quedar homogéneo, sin trozos (200-250cc)."],
+tip:"NO usar: brócoli, coliflor, choclo, arvejas, habas. Variar con pavo, pescado o soya."},
+{id:"papilla-pescado",title:"Papilla de pescado con zapallo",tag:"Pre-op",tagClass:"tag-pre",emoji:"🐟",
+desc:"Variación para alternar durante los 5 días",
+ings:["100g filete de pescado (merluza/reineta)","80g zapallo butternut","70g acelga (hojas)","250ml agua","Sal y perejil a gusto"],
+steps:["Pelar y cortar el zapallo en cubos. Hervir en agua hasta que esté blando (10 min).","Agregar acelga y pescado en trozos. Cocinar a fuego suave 8 min.","Retirar del fuego. Licuar todo con el agua de cocción hasta consistencia de papilla."],
+tip:"El zapallo butternut aporta cremosidad natural. El pescado se cocina más rápido que el pollo."},
+{id:"consome",title:"Consomé filtrado de pollo",tag:"Post-op",tagClass:"tag-post",emoji:"🍲",
+desc:"Rinde ~5 porciones. Se cuela y se toma solo el líquido",
+ings:["1kg carcasa/huesos de pollo","1 zanahoria","2 tallos de apio","2L agua fría","Cilantro y perejil fresco","Sal y orégano"],
+steps:["Lavar huesos. Pelar y cortar zanahoria y apio en trozos grandes.","Poner huesos en olla con agua fría. Llevar a hervor, bajar a fuego mínimo.","Agregar verduras y hierbas. Cocinar 1.5 hrs a fuego mínimo, retirando espuma.","Colar con colador fino o paño. Descartar todos los sólidos.","Refrigerar. Retirar la grasa solidificada. Servir 100-150cc tibio."],
+tip:"Congelar en porciones de 150cc. Preparar el día antes de la cirugía. Dura 4 días en refrigerador."},
+{id:"compota",title:"Compota / agua de cocción de frutas",tag:"Ambos",tagClass:"tag-both",emoji:"🍎",
+desc:"Pre-op: licuada como compota. Post-op: colada como bebida",
+ings:["2 manzanas","1 pera","1 durazno","500ml agua","Sucralosa o stevia al gusto","1 rama de canela (opcional)"],
+steps:["Pelar frutas, retirar semillas, cortar en trozos.","Hervir con agua y canela. Cocinar 20 min hasta que estén muy blandas.","PRE-OP: Licuar todo (fruta + líquido). Endulzar con sucralosa.","POST-OP: Colar y quedarse solo con el agua. Endulzar. Descartar la fruta."],
+tip:"Rinde 3 porciones. Guardar en refrigerador hasta 3 días."},
+];
+const SHOP_DATA=[
+{title:"Carnicería",color:"#D85A30",items:[
+{n:"Pechuga de pollo",q:"1 kg",t:"both"},{n:"Pechuga de pavo",q:"500 g",t:"pre"},
+{n:"Filete de pescado",q:"500 g",t:"pre"},{n:"Huesos/carcasa de pollo",q:"1 kg",t:"post"},
+{n:"Osobuco o hueso de carne",q:"500 g",t:"post"}]},
+{title:"Lácteos y proteínas",color:"#378ADD",items:[
+{n:"Yoghurt Protein sin azúcar",q:"10 un",t:"pre"},{n:"Leche Protein sin azúcar",q:"5 un",t:"pre"},
+{n:"Leche descremada sin lactosa Protein",q:"10 un",t:"post"},{n:"Shot Protein",q:"5 un",t:"post"},
+{n:"Huevos",q:"10 un",t:"pre"},{n:"Quesillo",q:"400 g",t:"pre"},
+{n:"Batido proteico en polvo",q:"1 envase",t:"both"}]},
+{title:"Verduras",color:"#639922",items:[
+{n:"Zapallo italiano",q:"1 un",t:"pre"},{n:"Zanahoria",q:"½ kg",t:"pre"},
+{n:"Zapallo butternut",q:"1 un",t:"pre"},{n:"Espinaca",q:"1 atado",t:"pre"},
+{n:"Acelga",q:"1 atado",t:"pre"},{n:"Apio",q:"1 atado",t:"both"},
+{n:"Cilantro fresco",q:"1 atado",t:"both"},{n:"Perejil fresco",q:"1 atado",t:"both"}]},
+{title:"Frutas",color:"#D4537E",items:[
+{n:"Manzanas",q:"6 un",t:"both"},{n:"Peras",q:"4 un",t:"both"},{n:"Duraznos",q:"4 un",t:"both"}]},
+{title:"Jaleas",color:"#1D9E75",items:[
+{n:"Jaleas proteicas",q:"20 un",t:"pre"},{n:"Jaleas sin azúcar (Vivo/Daily)",q:"20 un",t:"post"}]},
+{title:"Despensa",color:"#BA7517",items:[
+{n:"Té en bolsita (suave)",q:"1 caja",t:"post"},{n:"Hierbas: manzanilla, menta",q:"1 caja",t:"post"},
+{n:"Jugos sin azúcar en polvo",q:"1 caja",t:"post"},{n:"Sucralosa o stevia",q:"1 envase",t:"both"},
+{n:"Orégano seco",q:"1 frasco",t:"both"},{n:"Carne de soya hidratada",q:"1 bolsa",t:"pre"},
+{n:"Agua mineral sin gas",q:"6 bot (1.5L)",t:"post"}]},
+];
+function daysBetween(d1,d2){const a=new Date(d1.getFullYear(),d1.getMonth(),d1.getDate());const b=new Date(d2.getFullYear(),d2.getMonth(),d2.getDate());return Math.round((b-a)/86400000)}
+function getPhase(off){if(off>=-5&&off<=-1)return PHASES.PRE;if(off===0)return PHASES.SURGERY;if(off>=1&&off<=2)return PHASES.POST1;if(off>=3&&off<=7)return PHASES.POST2;if(off>7)return PHASES.DONE;return PHASES.FUTURE}
+function getMeals(ph){if(ph===PHASES.PRE)return PRE_MEALS;if(ph===PHASES.POST1)return POST1_MEALS;if(ph===PHASES.POST2)return POST2_MEALS;return[]}
+function dayLabel(off){if(off<0)return"Día "+off;if(off===0)return"Cirugía";return"Día +"+off}
+function fmtDate(d){const ds=["dom","lun","mar","mié","jue","vie","sáb"];const ms=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];return ds[d.getDay()]+" "+d.getDate()+" "+ms[d.getMonth()]}
+function sKey(sd,off,t){return"gabi_"+sd+"_d"+off+"_"+t}
+function CheckSvg(){return <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+
+function App(){
+const[surgeryDate,setSurgeryDate]=useState(null);
+const[dateInput,setDateInput]=useState("");
+const[view,setView]=useState("today");
+const[meals,setMeals]=useState({});
+const[hydration,setHydration]=useState({});
+const[notes,setNotes]=useState({});
+const[now,setNow]=useState(new Date());
+const[selDay,setSelDay]=useState(null);
+const[remOn,setRemOn]=useState(false);
+const[notifPerm,setNotifPerm]=useState("default");
+const[openRecipe,setOpenRecipe]=useState(null);
+const[shopChecked,setShopChecked]=useState({});
+const intRef=useRef(null);
+
+useEffect(()=>{const t=setInterval(()=>setNow(new Date()),60000);return()=>clearInterval(t)},[]);
+useEffect(()=>{try{const s=localStorage.getItem("gabi_surgery_date");if(s){setSurgeryDate(s);setDateInput(s)}}catch{}},[]);
+useEffect(()=>{try{const s=localStorage.getItem("gabi_shop");if(s)setShopChecked(JSON.parse(s))}catch{}},[]);
+useEffect(()=>{
+if(!surgeryDate)return;
+try{for(let d=-5;d<=7;d++){
+const ms=localStorage.getItem(sKey(surgeryDate,d,"meals"));
+const hs=localStorage.getItem(sKey(surgeryDate,d,"hyd"));
+const ns=localStorage.getItem(sKey(surgeryDate,d,"notes"));
+if(ms)setMeals(p=>({...p,[d]:JSON.parse(ms)}));
+if(hs)setHydration(p=>({...p,[d]:JSON.parse(hs)}));
+if(ns)setNotes(p=>({...p,[d]:ns}));
+}}catch{}
+},[surgeryDate]);
+
+const save=useCallback((off,type,data)=>{
+if(!surgeryDate)return;
+try{localStorage.setItem(sKey(surgeryDate,off,type),typeof data==="string"?data:JSON.stringify(data))}catch{}
+},[surgeryDate]);
+
+const today=new Date();
+const dayOff=surgeryDate?daysBetween(new Date(surgeryDate+"T12:00:00"),today):null;
+const curPhase=dayOff!==null?getPhase(dayOff):null;
+const actOff=selDay!==null?selDay:dayOff;
+const actPhase=actOff!==null?getPhase(actOff):null;
+const actMeals=actPhase?getMeals(actPhase):[];
+const pc=actPhase?PHASE_META[actPhase]:PHASE_META[PHASES.FUTURE];
+const mDone=meals[actOff]?Object.values(meals[actOff]).filter(Boolean).length:0;
+const mTotal=actMeals.length;
+const hDone=hydration[actOff]?Object.values(hydration[actOff]).filter(Boolean).length:0;
+const hTotal=HYD_TIMES.length;
+
+function toggleMeal(off,i){setMeals(p=>{const d={...(p[off]||{})};d[i]=!d[i];save(off,"meals",d);return{...p,[off]:d}})}
+function toggleHyd(off,i){setHydration(p=>{const d={...(p[off]||{})};d[i]=!d[i];save(off,"hyd",d);return{...p,[off]:d}})}
+function updNote(off,txt){setNotes(p=>{save(off,"notes",txt);return{...p,[off]:txt}})}
+function toggleShop(key){setShopChecked(p=>{const n={...p,[key]:!p[key]};try{localStorage.setItem("gabi_shop",JSON.stringify(n))}catch{}return n})}
+function handleSetDate(){if(!dateInput)return;setSurgeryDate(dateInput);try{localStorage.setItem("gabi_surgery_date",dateInput)}catch{};setView("today")}
+function startRem(){
+if(!("Notification" in window)){alert("Tu navegador no soporta notificaciones");return}
+Notification.requestPermission().then(p=>{setNotifPerm(p);if(p==="granted"){setRemOn(true);if(intRef.current)clearInterval(intRef.current);intRef.current=setInterval(()=>{const n=new Date();const ts=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");if(!surgeryDate||actOff===null)return;const ml=getMeals(getPhase(actOff));const m=ml.find(x=>x.time===ts);if(m)new Notification("🍽️ "+m.name,{body:m.desc});if(HYD_TIMES.includes(ts))new Notification("💧 Hidratación",{body:"Tomar agua a sorbos pequeños"})},60000)}})
+}
+function stopRem(){setRemOn(false);if(intRef.current){clearInterval(intRef.current);intRef.current=null}}
+
+if(!surgeryDate){
+return(<div className="app setup">
+<div style={{fontSize:48,marginBottom:12}}>🫶</div>
+<h1 style={{fontSize:26,fontWeight:700,marginBottom:8,letterSpacing:"-0.5px"}}>Seguimiento Bariátrico</h1>
+<p style={{fontSize:15,color:"#888",marginBottom:40}}>Acompañando a Gabriela en cada paso</p>
+<div className="card" style={{textAlign:"left",padding:"28px 24px"}}>
+<label style={{fontSize:13,fontWeight:500,color:"#666",display:"block",marginBottom:8}}>Fecha de la cirugía</label>
+<input type="date" value={dateInput} onChange={e=>setDateInput(e.target.value)}/>
+<button className="btn-primary" onClick={handleSetDate} disabled={!dateInput}>Comenzar seguimiento</button>
+</div>
+<div style={{marginTop:24,padding:"16px 20px",background:"#EEEDFE",borderRadius:12,fontSize:13,color:"#534AB7",lineHeight:1.6,textAlign:"left"}}>
+<strong>IMC 35 → 5 días preoperatorios</strong><br/>La app calculará automáticamente todas las fases según la fecha de cirugía.</div>
+</div>)}
+
+const surgObj=new Date(surgeryDate+"T12:00:00");
+const allDays=[];for(let d=-5;d<=7;d++)allDays.push(d);
+const shopTotal=SHOP_DATA.reduce((a,s)=>a+s.items.length,0);
+const shopDone=Object.values(shopChecked).filter(Boolean).length;
+
+return(<div className="app">
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0 12px"}}>
+<div><h1 style={{fontSize:20,fontWeight:700,letterSpacing:"-0.3px"}}>Gabriela 🫶</h1>
+<p style={{fontSize:12,color:"#999",marginTop:2}}>Cirugía: {fmtDate(surgObj)}</p></div>
+<button onClick={()=>{setSurgeryDate(null);setDateInput("");try{localStorage.removeItem("gabi_surgery_date")}catch{}}} style={{fontSize:11,padding:"6px 12px",borderRadius:8,border:"1px solid #E0E0E0",background:"transparent",cursor:"pointer",color:"#999",fontFamily:"'Outfit',sans-serif"}}>Cambiar</button>
+</div>
+
+<div className="phase-banner" style={{background:pc.bg,border:"1px solid "+pc.color+"22"}}>
+<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
+<span style={{fontSize:22}}>{pc.emoji}</span>
+<span style={{fontSize:16,fontWeight:600,color:pc.dark}}>{pc.label}</span>
+{actOff!==null&&actPhase!==PHASES.DONE&&actPhase!==PHASES.FUTURE&&(<span className="mono" style={{fontSize:13,color:pc.color,marginLeft:"auto",fontWeight:500}}>{dayLabel(actOff)}</span>)}
+</div>
+<p style={{fontSize:12,color:pc.dark,opacity:0.8,lineHeight:1.5}}>{pc.desc}</p>
+</div>
+
+{view==="today"&&actMeals.length>0&&(<div>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+<div className="card-flat"><div style={{fontSize:11,color:"#999",fontWeight:500,marginBottom:4}}>Comidas</div><div style={{fontSize:24,fontWeight:700,color:mDone===mTotal&&mTotal>0?"#1D9E75":undefined}}>{mDone}/{mTotal}</div><div className="prog-bar" style={{marginTop:8}}><div className="prog-fill" style={{width:mTotal?Math.round(mDone/mTotal*100)+"%":"0%",background:mDone===mTotal&&mTotal>0?"#1D9E75":pc.color}}/></div></div>
+<div className="card-flat"><div style={{fontSize:11,color:"#999",fontWeight:500,marginBottom:4}}>Hidratación</div><div style={{fontSize:24,fontWeight:700,color:hDone===hTotal?"#1D9E75":"#378ADD"}}>{hDone}/{hTotal}</div><div className="prog-bar" style={{marginTop:8}}><div className="prog-fill" style={{width:Math.round(hDone/hTotal*100)+"%",background:hDone===hTotal?"#1D9E75":"#378ADD"}}/></div></div>
+</div>
+<div className="section-title">Comidas del día</div>
+{actMeals.map((m,i)=>{const done=meals[actOff]?.[i];return(<div key={i} className={"check-item"+(done?" done":"")} onClick={()=>toggleMeal(actOff,i)}><div className="checkbox">{done&&<CheckSvg/>}</div><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6}}><span className="mono" style={{fontSize:12,color:"#999",fontWeight:500}}>{m.time}</span><span style={{fontSize:14,fontWeight:500,textDecoration:done?"line-through":"none"}}>{m.name}</span></div><p style={{fontSize:12,color:done?"#1D9E7599":"#888",marginTop:3,lineHeight:1.4}}>{m.desc}</p></div></div>)})}
+{(actPhase===PHASES.POST1||actPhase===PHASES.POST2)&&(<div style={{marginTop:16}}><div className="section-title">Hidratación entre comidas <span style={{fontSize:11,fontWeight:400,color:"#999"}}>15-20 min antes/después</span></div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{HYD_TIMES.map((t,i)=>{const done=hydration[actOff]?.[i];return <button key={i} className={"hyd-btn"+(done?" done":"")} onClick={()=>toggleHyd(actOff,i)}>💧 {t}</button>})}</div></div>)}
+<div style={{marginTop:16}}><div className="section-title">Notas del día</div><textarea placeholder="¿Cómo se siente Gabriela? ¿Alguna observación?" value={notes[actOff]||""} onChange={e=>updNote(actOff,e.target.value)} style={{width:"100%",minHeight:70,padding:"12px 14px",fontSize:13,fontFamily:"'Outfit',sans-serif",border:"1.5px solid #E8E8E4",borderRadius:10,outline:"none",resize:"vertical",background:"#FAFAF8",boxSizing:"border-box",lineHeight:1.5}}/></div>
+{selDay!==null&&(<button onClick={()=>{setSelDay(null);setView("today")}} style={{width:"100%",padding:12,fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:500,border:"1.5px solid #E0E0E0",borderRadius:10,background:"transparent",cursor:"pointer",color:"#666",marginTop:12}}>← Volver a hoy</button>)}
+</div>)}
+
+{view==="today"&&actPhase===PHASES.SURGERY&&(<div style={{textAlign:"center",padding:"32px 20px"}}><div style={{fontSize:48,marginBottom:12}}>🏥</div><h2 style={{fontSize:18,fontWeight:600,marginBottom:8}}>Día de la cirugía</h2><p style={{fontSize:14,color:"#888",lineHeight:1.6}}>Seguir todas las indicaciones del equipo quirúrgico.</p></div>)}
+
+{view==="calendar"&&selDay===null&&(<div><div className="section-title">Progreso completo</div>
+{allDays.map(d=>{const ph=getPhase(d);const mt=PHASE_META[ph];const dd=new Date(surgObj);dd.setDate(dd.getDate()+d);const isToday=d===dayOff;const dm=getMeals(ph);const dn=meals[d]?Object.values(meals[d]).filter(Boolean).length:0;const tot=dm.length;const pct=tot>0?Math.round(dn/tot*100):(ph===PHASES.SURGERY?100:0);
+return(<div key={d} className={"cal-row"+(isToday?" today":"")} style={isToday?{borderColor:mt.color,background:mt.bg}:{}} onClick={()=>{if(tot>0){setSelDay(d);setView("today")}}}>
+<div style={{width:10,height:10,borderRadius:"50%",background:pct===100?"#1D9E75":(d<=dayOff?mt.color:"#DDD"),flexShrink:0}}/>
+<div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:13,fontWeight:isToday?600:500}}>{dayLabel(d)}</span>{isToday&&<span style={{fontSize:10,fontWeight:600,background:mt.color,color:"#FFF",padding:"1px 7px",borderRadius:6}}>HOY</span>}</div><span style={{fontSize:11,color:"#999"}}>{fmtDate(dd)} · {mt.label}</span></div>
+{tot>0&&<span className="mono" style={{fontSize:13,fontWeight:600,color:pct===100?"#1D9E75":mt.color}}>{pct}%</span>}
+{ph===PHASES.SURGERY&&<span style={{fontSize:16}}>🏥</span>}
+</div>)})}</div>)}
+
+{view==="calendar"&&selDay!==null&&(<div>
+<button onClick={()=>setSelDay(null)} style={{width:"100%",padding:12,fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:500,border:"1.5px solid #E0E0E0",borderRadius:10,background:"transparent",cursor:"pointer",color:"#666",marginBottom:12}}>← Volver al calendario</button>
+{getMeals(getPhase(selDay)).map((m,i)=>{const done=meals[selDay]?.[i];return(<div key={i} className={"check-item"+(done?" done":"")} onClick={()=>toggleMeal(selDay,i)}><div className="checkbox">{done&&<CheckSvg/>}</div><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span className="mono" style={{fontSize:12,color:"#999"}}>{m.time}</span><span style={{fontSize:14,fontWeight:500,textDecoration:done?"line-through":"none"}}>{m.name}</span></div><p style={{fontSize:12,color:"#888",marginTop:3}}>{m.desc}</p></div></div>)})}
+</div>)}
+
+{view==="recipes"&&(<div><div className="section-title">Recetas del proceso</div>
+{RECIPES.map(r=>(<div key={r.id} className={"recipe-card"+(openRecipe===r.id?" open":"")}>
+<div className="recipe-header" onClick={()=>setOpenRecipe(openRecipe===r.id?null:r.id)}>
+<span style={{fontSize:28}}>{r.emoji}</span>
+<div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{r.title}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{r.desc}</div></div>
+<span className={"tag "+r.tagClass}>{r.tag}</span></div>
+{openRecipe===r.id&&(<div className="recipe-body">
+<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:600,color:"#555",marginBottom:6}}>Ingredientes</div>{r.ings.map((ing,i)=><div key={i} className="ing"><span>{ing}</span></div>)}</div>
+<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:600,color:"#555",marginBottom:6}}>Preparación</div>{r.steps.map((s,i)=>(<div key={i} className="step"><span className="step-num">{i+1}</span><span style={{fontSize:13,lineHeight:1.5}}>{s}</span></div>))}</div>
+{r.tip&&(<div style={{padding:"10px 14px",background:"#FAEEDA",borderRadius:10,fontSize:12,color:"#854F0B",lineHeight:1.5}}>💡 {r.tip}</div>)}
+</div>)}
+</div>))}</div>)}
+
+{view==="shop"&&(<div>
+<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div className="section-title" style={{marginBottom:0}}>Lista de compras</div><span style={{fontSize:12,color:"#999"}}>{shopDone}/{shopTotal}</span></div>
+<div className="prog-bar" style={{marginBottom:16}}><div className="prog-fill" style={{width:(shopTotal?Math.round(shopDone/shopTotal*100):0)+"%",background:"#1D9E75"}}/></div>
+{SHOP_DATA.map((sec,si)=>(<div key={si} className="shop-section">
+<div className="shop-header"><div style={{width:24,height:24,borderRadius:6,background:sec.color+"22",color:sec.color,fontSize:11,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center"}}>{sec.items.length}</div><span style={{fontSize:13,fontWeight:600,color:"#555"}}>{sec.title}</span></div>
+{sec.items.map((it,ii)=>{const key=si+"-"+ii;const done=shopChecked[key];const tagCls=it.t==="pre"?"tag-pre":it.t==="post"?"tag-post":"tag-both";const tagLbl=it.t==="pre"?"Pre-op":it.t==="post"?"Post-op":"Ambos";
+return(<div key={ii} className={"shop-item"+(done?" done":"")} onClick={()=>toggleShop(key)}>
+<div className="checkbox" style={{width:18,height:18,borderRadius:4,border:"1.5px solid "+(done?"#1D9E75":"#CCC"),background:done?"#1D9E75":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{done&&<CheckSvg/>}</div>
+<span className="item-name" style={{flex:1}}>{it.n}</span><span className={"tag "+tagCls}>{tagLbl}</span><span style={{fontSize:12,color:"#999",whiteSpace:"nowrap"}}>{it.q}</span>
+</div>)})}
+</div>))}</div>)}
+
+{view==="reminders"&&(<div>
+<div className="card" style={{textAlign:"center",marginBottom:16}}>
+<div style={{fontSize:36,marginBottom:10}}>{remOn?"🔔":"🔕"}</div>
+<h3 style={{fontSize:16,fontWeight:600,marginBottom:8}}>{remOn?"Recordatorios activos":"Recordatorios de comidas"}</h3>
+<p style={{fontSize:13,color:"#888",lineHeight:1.6,maxWidth:320,margin:"0 auto 16px"}}>{remOn?"Recibirás notificaciones en cada horario de comida e hidratación.":"Activa notificaciones para cada horario de comida y de hidratación."}</p>
+{!remOn?<button className="btn-primary" style={{width:"auto",padding:"12px 28px"}} onClick={startRem}>Activar recordatorios</button>:
+<button onClick={stopRem} style={{padding:"12px 28px",fontSize:14,fontWeight:600,fontFamily:"'Outfit',sans-serif",border:"1.5px solid #E24B4A",borderRadius:10,background:"transparent",color:"#E24B4A",cursor:"pointer"}}>Desactivar</button>}
+{notifPerm==="denied"&&<p style={{fontSize:12,color:"#E24B4A",marginTop:12}}>Notificaciones bloqueadas. Habilítalas en configuración del navegador.</p>}
+</div>
+{curPhase&&getMeals(curPhase).length>0&&(<div>
+<div className="section-title">Horarios de hoy ({dayLabel(dayOff)})</div>
+{getMeals(curPhase).map((m,i)=>{const nm=now.getHours()*60+now.getMinutes();const[mh,mm]=m.time.split(":").map(Number);const mt=mh*60+mm;const isPast=nm>mt+30;const isNow=Math.abs(nm-mt)<=30;
+return(<div key={i} className={"sched-row"+(isNow?" now":"")+(isPast?" past":"")}>
+<span className="mono" style={{fontSize:12,color:isNow?"#534AB7":"#999",fontWeight:500,width:44}}>{m.time}</span>
+<span style={{fontSize:13,fontWeight:isNow?600:400,color:isNow?"#3C3489":undefined,flex:1}}>{m.name}</span>
+{isNow&&<span style={{fontSize:9,background:"#7F77DD",color:"#FFF",padding:"2px 6px",borderRadius:4,fontWeight:600}}>AHORA</span>}
+</div>)})}
+<div style={{borderTop:"1px solid #EEEEE8",marginTop:10,paddingTop:10}}>
+<div style={{fontSize:12,fontWeight:500,color:"#378ADD",marginBottom:6}}>Hidratación</div>
+<div style={{display:"flex",flexWrap:"wrap",gap:4}}>{HYD_TIMES.map((t,i)=>{const nm=now.getHours()*60+now.getMinutes();const[hh,hm]=t.split(":").map(Number);const isPast=nm>hh*60+hm+30;const isNow=Math.abs(nm-(hh*60+hm))<=30;
+return <div key={i} className="mono" style={{display:"inline-block",padding:"3px 10px",borderRadius:6,fontSize:12,background:isNow?"#E6F1FB":"#F5F5F3",color:isNow?"#185FA5":(isPast?"#CCC":"#888"),fontWeight:isNow?600:400}}>{t}</div>})}</div>
+</div></div>)}
+</div>)}
+
+<div className="bottom-nav">
+{[{k:"today",icon:"📋",label:"Hoy"},{k:"calendar",icon:"📅",label:"Calendario"},{k:"recipes",icon:"🍲",label:"Recetas"},{k:"shop",icon:"🛒",label:"Compras"},{k:"reminders",icon:"🔔",label:"Alertas"}].map(t=>(<button key={t.k} className={"nav-btn"+(view===t.k?" active":"")} onClick={()=>{setView(t.k);if(t.k==="today")setSelDay(null)}}><span className="nav-icon">{t.icon}</span>{t.label}</button>))}
+</div>
+</div>)}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
