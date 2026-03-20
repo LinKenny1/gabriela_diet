@@ -469,6 +469,7 @@ return(<div key={i} className={"sched-row"+(isNow?" now":"")+(isPast?" past":"")
 {isNow&&<span style={{fontSize:9,background:isHyd?"#378ADD":"#7F77DD",color:"#FFF",padding:"2px 6px",borderRadius:4,fontWeight:600}}>AHORA</span>}
 </div>)})})()}
 </div>)}
+</div>)}
 
 <div className="bottom-nav">
 {[{k:"today",icon:"📋",label:"Hoy"},{k:"calendar",icon:"📅",label:"Calendario"},{k:"recipes",icon:"🍲",label:"Recetas"},{k:"shop",icon:"🛒",label:"Compras"},{k:"reminders",icon:"🔔",label:"Alertas"}].map(t=>(<button key={t.k} className={"nav-btn"+(view===t.k?" active":"")} onClick={()=>{setView(t.k);if(t.k==="today")setSelDay(null)}}><span className="nav-icon">{t.icon}</span>{t.label}</button>))}
