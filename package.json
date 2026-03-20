@@ -7,6 +7,15 @@
     "dev": "npx serve public -l 3000",
     "deploy": "netlify deploy --dir=public --prod"
   },
-  "keywords": ["bariatric", "nutrition", "tracking", "pwa"],
-  "author": "Con amor para Gabriela 🫶"
+  "keywords": [
+    "bariatric",
+    "nutrition",
+    "tracking",
+    "pwa"
+  ],
+  "author": "Con amor para Gabriela 🫶",
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-react": "^7.28.5"
+  }
 }
