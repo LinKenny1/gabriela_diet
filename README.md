@@ -27,54 +27,72 @@ Gabriela se someterá a una cirugía bariátrica en Interclínica Cordillera (Sa
 
 ## Funcionalidades de la app
 
-- **📋 Hoy**: Checklist de comidas con horarios, progreso, hidratación y notas diarias
+- **📋 Hoy**: Timeline intercalado de comidas + hidratación, opciones detalladas por comida, progreso y notas diarias
 - **📅 Calendario**: Vista de los 13 días con porcentaje de avance por día
-- **🍲 Recetas**: 4 recetas desplegables (papillas, consomé, compota)
+- **🍲 Recetas**: 4 recetas desplegables con contexto de fase y comida (papillas, consomé, compota)
 - **🛒 Compras**: Lista de supermercado interactiva con tags pre-op/post-op
-- **🔔 Alertas**: Recordatorios con notificaciones del navegador
+- **🔔 Alertas**: Sincronización con calendario nativo (.ics) + recordatorios in-app
 
-## Stack técnico actual
+### Sistema de alertas
 
-- **HTML/CSS/JS** con React 18 (CDN, Babel standalone)
-- **PWA** con manifest.json para instalación en pantalla de inicio
+La app genera archivos `.ics` que se importan al calendario del teléfono. Cada evento incluye el nombre de la comida, la fase, y una alarma. Las alertas del calendario suenan incluso con la pantalla bloqueada, a diferencia de las notificaciones web que solo funcionan con la app activa.
+
+## Stack técnico
+
+- **HTML/CSS/JS** con React 18 (CDN, Babel standalone) — single-file app
+- **PWA** con manifest.json, iconos PNG 192/512, Service Worker con cache offline
+- **Service Worker**: cache de assets y Google Fonts, network-first para HTML (actualizaciones inmediatas)
 - **localStorage** para persistencia de datos
-- **Notificaciones del navegador** para recordatorios
-- **Dark mode** automático
+- **Dark mode** automático via CSS media query
+- **Mobile-first** max-width 520px
 
 ## Hosting
 
-- **Netlify** — sitio creado: `gabi-bariatrica.netlify.app`
+- **Netlify** — URL: https://gabi-bariatrica.netlify.app
 - Site ID: `61f3eeef-b340-459f-9920-f2ae478fe433`
-- Deploy: arrastrar carpeta `public/` en [app.netlify.com/drop](https://app.netlify.com/drop) o usar `netlify deploy --dir=public --prod`
+- Deploy: `npx netlify deploy --prod --dir=public`
 
 ## Estructura del repositorio
 
 ```
-gabi-repo/
-├── README.md                    # Este archivo
-├── CLAUDE.md                    # Instrucciones para Claude Code
-├── public/                      # Archivos para deploy (Netlify)
-│   ├── index.html               # App completa (PWA)
-│   └── manifest.json            # PWA manifest
-├── docs/                        # Documentación nutricional
-│   ├── 01_pase_nutricional.md   # Datos clínicos de Gabriela
-│   ├── 02_dieta_preoperatoria.md # Dieta pre-op detallada
+gabriela_diet/
+├── README.md                       # Este archivo
+├── CLAUDE.md                       # Instrucciones para Claude Code
+├── public/                         # Archivos para deploy (Netlify)
+│   ├── index.html                  # App completa (React + CSS + lógica)
+│   ├── sw.js                       # Service Worker (cache offline + notificaciones)
+│   ├── manifest.json               # PWA manifest
+│   ├── icon-192.png                # Icono PWA 192x192
+│   └── icon-512.png                # Icono PWA 512x512
+├── docs/                           # Documentación nutricional (fuente de verdad)
+│   ├── 01_pase_nutricional.md      # Datos clínicos de Gabriela
+│   ├── 02_dieta_preoperatoria.md   # Dieta pre-op detallada
 │   ├── 03_regimen_postoperatorio.md # Régimen líquido 7 días
-│   └── 04_recetas.md            # Recetas para papillas y consomé
-├── src/                         # Código fuente (para migración futura)
-│   └── app.jsx                  # Componente React principal
-├── netlify.toml                 # Configuración Netlify
-└── package.json                 # Metadata del proyecto
+│   ├── 04_recetas.md               # Recetas para papillas y consomé
+│   └── originales/                 # PDFs originales de la nutricionista
+├── src/                            # Código fuente (referencia para migración)
+│   └── app.jsx                     # Componente React principal
+├── netlify.toml                    # Configuración Netlify
+└── package.json                    # Metadata del proyecto
 ```
+
+## Instalación en el teléfono (Samsung Android)
+
+1. Abrir https://gabi-bariatrica.netlify.app en **Chrome**
+2. Menu (⋮) → **"Añadir a pantalla de inicio"** o **"Instalar app"**
+3. Para alertas confiables: ir a Alertas → **"Descargar fase actual"** → importar al calendario
+4. Configurar en el teléfono:
+   - Ajustes → Apps → Calendario → Batería → **"Sin restricciones"**
+   - Ajustes → Apps → Chrome → Batería → **"Sin restricciones"**
 
 ## Próximos pasos sugeridos
 
-1. **Migrar a Vite + React** — Pasar del build inline (Babel CDN) a un proyecto Vite con hot reload
-2. **Service Worker** — Para notificaciones offline y push notifications reales
-3. **Registro de peso** — Tracking de peso diario con gráfico de progreso
-4. **Contador de líquidos** — Registro preciso de cc consumidos por toma
-5. **Export de datos** — Generar resumen PDF para la nutricionista
-6. **Fase 3+ alimentaria** — Agregar las etapas siguientes post régimen líquido cuando la nutricionista las indique
+1. **Exportar progreso** — Generar PDF o link para compartir con la nutricionista
+2. **Countdown a cirugía** — Indicador visible en pantalla principal
+3. **Indicador de próxima comida** — Tiempo restante para la siguiente toma
+4. **Registro de volumen** — Que Gabi registre cuántos cc tomó realmente
+5. **Migrar a Vite + React** — Build real con hot reload para desarrollo
+6. **Fase 3+ alimentaria** — Agregar etapas siguientes cuando la nutricionista las indique
 
 ## Licencia
 
