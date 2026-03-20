@@ -72,6 +72,7 @@ html,body{background:#1a1a1a;color:#e0e0e0}
 .setup input[type=date]{background:#242424;border-color:#444;color:#e0e0e0}
 .hyd-btn{background:#242424;border-color:#444;color:#888}
 .hyd-btn.done{background:#0C447C;border-color:#378ADD;color:#B5D4F4}
+.hyd-inline{border-color:#333 !important}
 .check-item.done{background:#085041;border-color:#1D9E7533}
 textarea{background:#242424 !important;border-color:#444 !important;color:#e0e0e0 !important}
 .prog-bar{background:#333}
@@ -83,6 +84,9 @@ textarea{background:#242424 !important;border-color:#444 !important;color:#e0e0e
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script>
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}
+</script>
 <script type="text/babel">
 const {useState,useEffect,useCallback,useRef}=React;
 const PHASES={PRE:"pre",SURGERY:"surgery",POST1:"post1",POST2:"post2",DONE:"done",FUTURE:"future"};
@@ -95,12 +99,17 @@ const PHASE_META={
 [PHASES.FUTURE]:{label:"Próximamente",color:"#888780",bg:"#F1EFE8",dark:"#444441",emoji:"📅",desc:""},
 };
 const PRE_MEALS=[
-{time:"08:00",name:"Desayuno",desc:"Yoghurt/Leche Protein + huevo o quesillo (80g)"},
-{time:"10:30",name:"Colación AM",desc:"Batido proteico o 2 jaleas proteicas"},
-{time:"13:00",name:"Almuerzo",desc:"Papilla 200-250cc (proteína + verduras + caldo)"},
-{time:"16:00",name:"Once",desc:"Compota de fruta licuada + jalea proteica"},
-{time:"19:00",name:"Cena",desc:"Papilla 200-250cc (similar al almuerzo)"},
-{time:"21:30",name:"Colación PM",desc:"Yoghurt / Leche / Jalea Protein"},
+{time:"08:00",name:"Desayuno",desc:"Yoghurt o Leche Protein + huevo o quesillo",
+ options:["Yoghurt Protein sin azúcar","Leche Protein sin azúcar"],extra:"+ 1 huevo revuelto en agua ó 1 trozo de quesillo (80g)"},
+{time:"10:30",name:"Colación AM",desc:"Batido proteico o jaleas proteicas",
+ options:["1 porción de batido proteico","2 jaleas proteicas"]},
+{time:"13:00",name:"Almuerzo",desc:"Papilla 200-250cc",
+ options:["Proteína 80-100g: pollo, pavo, pescado o soya","Verduras 150g (NO brócoli/coliflor/choclo/arvejas/habas)","Líquido: caldo o agua de cocción"]},
+{time:"16:00",name:"Once",desc:"Compota de fruta licuada + 1 jalea proteica"},
+{time:"19:00",name:"Cena",desc:"Papilla 200-250cc (similar al almuerzo)",
+ options:["Mismas opciones de proteína y verduras que almuerzo"]},
+{time:"21:30",name:"Colación PM",desc:"Elegir una opción:",
+ options:["Yoghurt Protein","Leche Protein","Jalea Protein sin azúcar"]},
 ];
 const POST1_MEALS=[
 {time:"08:00",name:"Desayuno",desc:"100cc Té clarito (NO cargado)"},
@@ -123,23 +132,29 @@ const POST2_MEALS=[
 {time:"22:00",name:"Colación nocturna",desc:"100cc Batido proteico (½ scoop)"},
 ];
 const HYD_TIMES=["09:00","11:00","13:00","15:00","17:00","19:00","21:00"];
+const PRE_HYD_TIMES=["09:15","12:00","14:30","17:30","20:30"];
+function getHydTimes(ph){if(ph===PHASES.PRE)return PRE_HYD_TIMES;if(ph===PHASES.POST1||ph===PHASES.POST2)return HYD_TIMES;return[]}
 const RECIPES=[
 {id:"papilla-pollo",title:"Papilla de pollo con verduras",tag:"Pre-op",tagClass:"tag-pre",emoji:"🍗",
+phase:"Preoperatorio (5 días)",meal:"Almuerzo (13:00) y Cena (19:00)",
 desc:"Base del almuerzo y cena preoperatoria",
 ings:["100g pechuga de pollo","50g zanahoria","50g zapallo italiano","50g espinaca","200ml agua o caldo","Sal y orégano a gusto"],
 steps:["Pelar y cortar zanahoria en rodajas finas, zapallo en cubos, lavar espinaca.","Poner el pollo en la olla con el agua. Hervir y cocinar a fuego medio por 15 min.","Agregar las verduras. Cocinar 10 min más hasta que todo esté blando.","Licuar todo junto con parte del caldo. Debe quedar homogéneo, sin trozos (200-250cc)."],
 tip:"NO usar: brócoli, coliflor, choclo, arvejas, habas. Variar con pavo, pescado o soya."},
 {id:"papilla-pescado",title:"Papilla de pescado con zapallo",tag:"Pre-op",tagClass:"tag-pre",emoji:"🐟",
+phase:"Preoperatorio (5 días)",meal:"Almuerzo (13:00) y Cena (19:00) — variación",
 desc:"Variación para alternar durante los 5 días",
 ings:["100g filete de pescado (merluza/reineta)","80g zapallo butternut","70g acelga (hojas)","250ml agua","Sal y perejil a gusto"],
 steps:["Pelar y cortar el zapallo en cubos. Hervir en agua hasta que esté blando (10 min).","Agregar acelga y pescado en trozos. Cocinar a fuego suave 8 min.","Retirar del fuego. Licuar todo con el agua de cocción hasta consistencia de papilla."],
 tip:"El zapallo butternut aporta cremosidad natural. El pescado se cocina más rápido que el pollo."},
 {id:"consome",title:"Consomé filtrado de pollo",tag:"Post-op",tagClass:"tag-post",emoji:"🍲",
+phase:"Post-op Fase 1 y 2 (días 1-7)",meal:"Almuerzo (14:00) y Cena (20:00)",
 desc:"Rinde ~5 porciones. Se cuela y se toma solo el líquido",
 ings:["1kg carcasa/huesos de pollo","1 zanahoria","2 tallos de apio","2L agua fría","Cilantro y perejil fresco","Sal y orégano"],
 steps:["Lavar huesos. Pelar y cortar zanahoria y apio en trozos grandes.","Poner huesos en olla con agua fría. Llevar a hervor, bajar a fuego mínimo.","Agregar verduras y hierbas. Cocinar 1.5 hrs a fuego mínimo, retirando espuma.","Colar con colador fino o paño. Descartar todos los sólidos.","Refrigerar. Retirar la grasa solidificada. Servir 100-150cc tibio."],
 tip:"Congelar en porciones de 150cc. Preparar el día antes de la cirugía. Dura 4 días en refrigerador."},
 {id:"compota",title:"Compota / agua de cocción de frutas",tag:"Ambos",tagClass:"tag-both",emoji:"🍎",
+phase:"Pre-op: Once (16:00) · Post-op: líquido libre",meal:"Pre-op: compota licuada · Post-op: solo el agua colada",
 desc:"Pre-op: licuada como compota. Post-op: colada como bebida",
 ings:["2 manzanas","1 pera","1 durazno","500ml agua","Sucralosa o stevia al gusto","1 rama de canela (opcional)"],
 steps:["Pelar frutas, retirar semillas, cortar en trozos.","Hervir con agua y canela. Cocinar 20 min hasta que estén muy blandas.","PRE-OP: Licuar todo (fruta + líquido). Endulzar con sucralosa.","POST-OP: Colar y quedarse solo con el agua. Endulzar. Descartar la fruta."],
@@ -222,8 +237,9 @@ const actMeals=actPhase?getMeals(actPhase):[];
 const pc=actPhase?PHASE_META[actPhase]:PHASE_META[PHASES.FUTURE];
 const mDone=meals[actOff]?Object.values(meals[actOff]).filter(Boolean).length:0;
 const mTotal=actMeals.length;
+const actHyd=getHydTimes(actPhase);
 const hDone=hydration[actOff]?Object.values(hydration[actOff]).filter(Boolean).length:0;
-const hTotal=HYD_TIMES.length;
+const hTotal=actHyd.length;
 
 function toggleMeal(off,i){setMeals(p=>{const d={...(p[off]||{})};d[i]=!d[i];save(off,"meals",d);return{...p,[off]:d}})}
 function toggleHyd(off,i){setHydration(p=>{const d={...(p[off]||{})};d[i]=!d[i];save(off,"hyd",d);return{...p,[off]:d}})}
@@ -232,9 +248,73 @@ function toggleShop(key){setShopChecked(p=>{const n={...p,[key]:!p[key]};try{loc
 function handleSetDate(){if(!dateInput)return;setSurgeryDate(dateInput);try{localStorage.setItem("gabi_surgery_date",dateInput)}catch{};setView("today")}
 function startRem(){
 if(!("Notification" in window)){alert("Tu navegador no soporta notificaciones");return}
-Notification.requestPermission().then(p=>{setNotifPerm(p);if(p==="granted"){setRemOn(true);if(intRef.current)clearInterval(intRef.current);intRef.current=setInterval(()=>{const n=new Date();const ts=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");if(!surgeryDate||actOff===null)return;const ml=getMeals(getPhase(actOff));const m=ml.find(x=>x.time===ts);if(m)new Notification("🍽️ "+m.name,{body:m.desc});if(HYD_TIMES.includes(ts))new Notification("💧 Hidratación",{body:"Tomar agua a sorbos pequeños"})},60000)}})
+Notification.requestPermission().then(p=>{setNotifPerm(p);if(p==="granted"){setRemOn(true);if(intRef.current)clearInterval(intRef.current);intRef.current=setInterval(()=>{const n=new Date();const ts=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");if(!surgeryDate||actOff===null)return;const ml=getMeals(getPhase(actOff));const m=ml.find(x=>x.time===ts);if(m)new Notification("🍽️ "+m.name,{body:m.desc,tag:"meal-"+ts,requireInteraction:true});const curHyd=getHydTimes(getPhase(actOff));if(curHyd.includes(ts))new Notification("💧 Hidratación",{body:"Tomar agua a sorbos pequeños (15-20 min antes/después de comida)",tag:"hyd-"+ts,requireInteraction:true})},60000)}})
 }
 function stopRem(){setRemOn(false);if(intRef.current){clearInterval(intRef.current);intRef.current=null}}
+
+function generateICS(){
+if(!surgeryDate)return;
+const surg=new Date(surgeryDate+"T12:00:00");
+const pad=(n)=>String(n).padStart(2,"0");
+const fmtDT=(d,time)=>{const[h,m]=time.split(":").map(Number);return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"T"+pad(h)+pad(m)+"00"};
+const fmtDTEnd=(d,time,durMin)=>{const[h,m]=time.split(":").map(Number);const end=new Date(d);end.setHours(h,m+durMin,0);return end.getFullYear()+pad(end.getMonth()+1)+pad(end.getDate())+"T"+pad(end.getHours())+pad(end.getMinutes())+"00"};
+let events=[];
+for(let off=-5;off<=7;off++){
+const phase=getPhase(off);
+if(phase===PHASES.SURGERY)continue;
+const dayDate=new Date(surg);dayDate.setDate(surg.getDate()+off);
+const phaseMeta=PHASE_META[phase];
+const phaseName=phaseMeta.label;
+const meals=getMeals(phase);
+const hyds=getHydTimes(phase);
+meals.forEach((m,i)=>{
+const summary=m.name+" — "+phaseName;
+const desc=m.desc.replace(/,/g,"\\,");
+events.push("BEGIN:VEVENT\r\nUID:gabi-meal-d"+off+"-"+i+"@gabi-bariatrica\r\nDTSTART:"+fmtDT(dayDate,m.time)+"\r\nDTEND:"+fmtDTEnd(dayDate,m.time,15)+"\r\nSUMMARY:"+phaseMeta.emoji+" "+summary+"\r\nDESCRIPTION:"+desc+"\\nRevisa la app para detalles y opciones.\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:"+m.name+" en 5 min\r\nEND:VALARM\r\nEND:VEVENT");
+});
+hyds.forEach((t,i)=>{
+events.push("BEGIN:VEVENT\r\nUID:gabi-hyd-d"+off+"-"+i+"@gabi-bariatrica\r\nDTSTART:"+fmtDT(dayDate,t)+"\r\nDTEND:"+fmtDTEnd(dayDate,t,10)+"\r\nSUMMARY:💧 Hidratación — "+phaseName+"\r\nDESCRIPTION:Tomar agua a sorbos pequeños. Separada de comidas 15-20 min.\r\nBEGIN:VALARM\r\nTRIGGER:PT0M\r\nACTION:DISPLAY\r\nDESCRIPTION:Hora de hidratación\r\nEND:VALARM\r\nEND:VEVENT");
+});
+}
+const ics="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Gabi Bariatrica//ES\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:Gabi - Seguimiento Bariátrico\r\n"+events.join("\r\n")+"\r\nEND:VCALENDAR";
+const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;a.download="gabi-recordatorios.ics";
+document.body.appendChild(a);a.click();document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}
+
+function generatePhaseICS(){
+if(!surgeryDate||!curPhase||curPhase===PHASES.SURGERY||curPhase===PHASES.DONE)return;
+const surg=new Date(surgeryDate+"T12:00:00");
+const pad=(n)=>String(n).padStart(2,"0");
+const fmtDT=(d,time)=>{const[h,m]=time.split(":").map(Number);return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"T"+pad(h)+pad(m)+"00"};
+const fmtDTEnd=(d,time,durMin)=>{const[h,m]=time.split(":").map(Number);const end=new Date(d);end.setHours(h,m+durMin,0);return end.getFullYear()+pad(end.getMonth()+1)+pad(end.getDate())+"T"+pad(end.getHours())+pad(end.getMinutes())+"00"};
+let events=[];
+const phaseMeta=PHASE_META[curPhase];
+const phaseName=phaseMeta.label;
+const pMeals=getMeals(curPhase);
+const pHyds=getHydTimes(curPhase);
+const ranges={pre:[-5,-1],post1:[1,2],post2:[3,7]};
+const[startOff,endOff]=ranges[curPhase]||[0,0];
+for(let off=startOff;off<=endOff;off++){
+const dayDate=new Date(surg);dayDate.setDate(surg.getDate()+off);
+pMeals.forEach((m,i)=>{
+events.push("BEGIN:VEVENT\r\nUID:gabi-meal-d"+off+"-"+i+"@gabi-bariatrica\r\nDTSTART:"+fmtDT(dayDate,m.time)+"\r\nDTEND:"+fmtDTEnd(dayDate,m.time,15)+"\r\nSUMMARY:"+phaseMeta.emoji+" "+m.name+" — "+phaseName+"\r\nDESCRIPTION:"+m.desc.replace(/,/g,"\\,")+"\\nRevisa la app para detalles.\r\nBEGIN:VALARM\r\nTRIGGER:-PT5M\r\nACTION:DISPLAY\r\nDESCRIPTION:"+m.name+" en 5 min\r\nEND:VALARM\r\nEND:VEVENT");
+});
+pHyds.forEach((t,i)=>{
+events.push("BEGIN:VEVENT\r\nUID:gabi-hyd-d"+off+"-"+i+"@gabi-bariatrica\r\nDTSTART:"+fmtDT(dayDate,t)+"\r\nDTEND:"+fmtDTEnd(dayDate,t,10)+"\r\nSUMMARY:💧 Hidratación\r\nDESCRIPTION:Agua a sorbos pequeños\\n15-20 min separada de comidas.\r\nBEGIN:VALARM\r\nTRIGGER:PT0M\r\nACTION:DISPLAY\r\nDESCRIPTION:Hora de hidratación\r\nEND:VALARM\r\nEND:VEVENT");
+});
+}
+const ics="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Gabi Bariatrica//ES\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:Gabi - "+phaseName+"\r\n"+events.join("\r\n")+"\r\nEND:VCALENDAR";
+const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;a.download="gabi-"+curPhase+".ics";
+document.body.appendChild(a);a.click();document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}
 
 if(!surgeryDate){
 return(<div className="app setup">
@@ -271,17 +351,32 @@ return(<div className="app">
 <p style={{fontSize:12,color:pc.dark,opacity:0.8,lineHeight:1.5}}>{pc.desc}</p>
 </div>
 
-{view==="today"&&actMeals.length>0&&(<div>
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+{view==="today"&&actMeals.length>0&&(()=>{
+const timeline=[];
+actMeals.forEach((m,i)=>timeline.push({type:"meal",time:m.time,data:m,idx:i}));
+actHyd.forEach((t,i)=>timeline.push({type:"hyd",time:t,idx:i}));
+timeline.sort((a,b)=>a.time.localeCompare(b.time));
+return(<div>
+<div style={{display:"grid",gridTemplateColumns:hTotal>0?"1fr 1fr":"1fr",gap:10,marginBottom:16}}>
 <div className="card-flat"><div style={{fontSize:11,color:"#999",fontWeight:500,marginBottom:4}}>Comidas</div><div style={{fontSize:24,fontWeight:700,color:mDone===mTotal&&mTotal>0?"#1D9E75":undefined}}>{mDone}/{mTotal}</div><div className="prog-bar" style={{marginTop:8}}><div className="prog-fill" style={{width:mTotal?Math.round(mDone/mTotal*100)+"%":"0%",background:mDone===mTotal&&mTotal>0?"#1D9E75":pc.color}}/></div></div>
-<div className="card-flat"><div style={{fontSize:11,color:"#999",fontWeight:500,marginBottom:4}}>Hidratación</div><div style={{fontSize:24,fontWeight:700,color:hDone===hTotal?"#1D9E75":"#378ADD"}}>{hDone}/{hTotal}</div><div className="prog-bar" style={{marginTop:8}}><div className="prog-fill" style={{width:Math.round(hDone/hTotal*100)+"%",background:hDone===hTotal?"#1D9E75":"#378ADD"}}/></div></div>
+{hTotal>0&&<div className="card-flat"><div style={{fontSize:11,color:"#999",fontWeight:500,marginBottom:4}}>Hidratación</div><div style={{fontSize:24,fontWeight:700,color:hDone===hTotal?"#1D9E75":"#378ADD"}}>{hDone}/{hTotal}</div><div className="prog-bar" style={{marginTop:8}}><div className="prog-fill" style={{width:hTotal?Math.round(hDone/hTotal*100)+"%":"0%",background:hDone===hTotal?"#1D9E75":"#378ADD"}}/></div></div>}
 </div>
-<div className="section-title">Comidas del día</div>
-{actMeals.map((m,i)=>{const done=meals[actOff]?.[i];return(<div key={i} className={"check-item"+(done?" done":"")} onClick={()=>toggleMeal(actOff,i)}><div className="checkbox">{done&&<CheckSvg/>}</div><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6}}><span className="mono" style={{fontSize:12,color:"#999",fontWeight:500}}>{m.time}</span><span style={{fontSize:14,fontWeight:500,textDecoration:done?"line-through":"none"}}>{m.name}</span></div><p style={{fontSize:12,color:done?"#1D9E7599":"#888",marginTop:3,lineHeight:1.4}}>{m.desc}</p></div></div>)})}
-{(actPhase===PHASES.POST1||actPhase===PHASES.POST2)&&(<div style={{marginTop:16}}><div className="section-title">Hidratación entre comidas <span style={{fontSize:11,fontWeight:400,color:"#999"}}>15-20 min antes/después</span></div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{HYD_TIMES.map((t,i)=>{const done=hydration[actOff]?.[i];return <button key={i} className={"hyd-btn"+(done?" done":"")} onClick={()=>toggleHyd(actOff,i)}>💧 {t}</button>})}</div></div>)}
+<div className="section-title">Seguimiento del día <span style={{fontSize:11,fontWeight:400,color:"#999"}}>{hTotal>0?"comidas + hidratación intercaladas":"comidas"}</span></div>
+{timeline.map((item,ti)=>{
+if(item.type==="meal"){const m=item.data;const done=meals[actOff]?.[item.idx];return(<div key={"m"+ti} className={"check-item"+(done?" done":"")} onClick={()=>toggleMeal(actOff,item.idx)}><div className="checkbox">{done&&<CheckSvg/>}</div><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6}}><span className="mono" style={{fontSize:12,color:"#999",fontWeight:500}}>{m.time}</span><span style={{fontSize:14,fontWeight:500,textDecoration:done?"line-through":"none"}}>{m.name}</span></div><p style={{fontSize:12,color:done?"#1D9E7599":"#888",marginTop:3,lineHeight:1.4}}>{m.desc}</p>
+{m.options&&!done&&(<div style={{marginTop:6,paddingLeft:2}}>{m.options.map((opt,oi)=><div key={oi} style={{fontSize:11,color:"#666",lineHeight:1.6,paddingLeft:8,borderLeft:"2px solid #E8E8E4"}}>• {opt}</div>)}{m.extra&&<div style={{fontSize:11,color:"#534AB7",marginTop:2,paddingLeft:8,fontWeight:500}}>{m.extra}</div>}</div>)}
+</div></div>)}
+if(item.type==="hyd"){const done=hydration[actOff]?.[item.idx];return(<div key={"h"+ti} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 14px",marginBottom:6,borderRadius:12,border:"1.5px dashed "+(done?"#378ADD44":"#E0E0E0"),background:done?"#E6F1FB":"transparent",cursor:"pointer",transition:"all 0.2s",opacity:done?0.7:1}} onClick={()=>toggleHyd(actOff,item.idx)}>
+<div style={{width:22,height:22,borderRadius:6,border:"2px solid "+(done?"#378ADD":"#CCC"),background:done?"#378ADD":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{done&&<CheckSvg/>}</div>
+<span style={{fontSize:13,color:done?"#185FA5":"#378ADD",fontWeight:500}}>💧 Hidratación</span>
+<span className="mono" style={{fontSize:12,color:"#999",marginLeft:"auto"}}>{item.time}</span>
+<span style={{fontSize:10,color:"#999"}}>sorbos pequeños</span>
+</div>)}
+return null;
+})}
 <div style={{marginTop:16}}><div className="section-title">Notas del día</div><textarea placeholder="¿Cómo se siente Gabriela? ¿Alguna observación?" value={notes[actOff]||""} onChange={e=>updNote(actOff,e.target.value)} style={{width:"100%",minHeight:70,padding:"12px 14px",fontSize:13,fontFamily:"'Outfit',sans-serif",border:"1.5px solid #E8E8E4",borderRadius:10,outline:"none",resize:"vertical",background:"#FAFAF8",boxSizing:"border-box",lineHeight:1.5}}/></div>
 {selDay!==null&&(<button onClick={()=>{setSelDay(null);setView("today")}} style={{width:"100%",padding:12,fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:500,border:"1.5px solid #E0E0E0",borderRadius:10,background:"transparent",cursor:"pointer",color:"#666",marginTop:12}}>← Volver a hoy</button>)}
-</div>)}
+</div>)})()}
 
 {view==="today"&&actPhase===PHASES.SURGERY&&(<div style={{textAlign:"center",padding:"32px 20px"}}><div style={{fontSize:48,marginBottom:12}}>🏥</div><h2 style={{fontSize:18,fontWeight:600,marginBottom:8}}>Día de la cirugía</h2><p style={{fontSize:14,color:"#888",lineHeight:1.6}}>Seguir todas las indicaciones del equipo quirúrgico.</p></div>)}
 
@@ -303,7 +398,10 @@ return(<div key={d} className={"cal-row"+(isToday?" today":"")} style={isToday?{
 {RECIPES.map(r=>(<div key={r.id} className={"recipe-card"+(openRecipe===r.id?" open":"")}>
 <div className="recipe-header" onClick={()=>setOpenRecipe(openRecipe===r.id?null:r.id)}>
 <span style={{fontSize:28}}>{r.emoji}</span>
-<div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{r.title}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{r.desc}</div></div>
+<div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{r.title}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{r.desc}</div>
+{r.phase&&<div style={{fontSize:10,color:r.tagClass==="tag-pre"?"#534AB7":r.tagClass==="tag-post"?"#0F6E56":"#854F0B",marginTop:3,fontWeight:500}}>📅 {r.phase}</div>}
+{r.meal&&<div style={{fontSize:10,color:"#999",marginTop:1}}>🍽️ {r.meal}</div>}
+</div>
 <span className={"tag "+r.tagClass}>{r.tag}</span></div>
 {openRecipe===r.id&&(<div className="recipe-body">
 <div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:600,color:"#555",marginBottom:6}}>Ingredientes</div>{r.ings.map((ing,i)=><div key={i} className="ing"><span>{ing}</span></div>)}</div>
@@ -325,27 +423,51 @@ return(<div key={ii} className={"shop-item"+(done?" done":"")} onClick={()=>togg
 </div>))}</div>)}
 
 {view==="reminders"&&(<div>
-<div className="card" style={{textAlign:"center",marginBottom:16}}>
-<div style={{fontSize:36,marginBottom:10}}>{remOn?"🔔":"🔕"}</div>
-<h3 style={{fontSize:16,fontWeight:600,marginBottom:8}}>{remOn?"Recordatorios activos":"Recordatorios de comidas"}</h3>
-<p style={{fontSize:13,color:"#888",lineHeight:1.6,maxWidth:320,margin:"0 auto 16px"}}>{remOn?"Recibirás notificaciones en cada horario de comida e hidratación.":"Activa notificaciones para cada horario de comida y de hidratación."}</p>
-{!remOn?<button className="btn-primary" style={{width:"auto",padding:"12px 28px"}} onClick={startRem}>Activar recordatorios</button>:
-<button onClick={stopRem} style={{padding:"12px 28px",fontSize:14,fontWeight:600,fontFamily:"'Outfit',sans-serif",border:"1.5px solid #E24B4A",borderRadius:10,background:"transparent",color:"#E24B4A",cursor:"pointer"}}>Desactivar</button>}
-{notifPerm==="denied"&&<p style={{fontSize:12,color:"#E24B4A",marginTop:12}}>Notificaciones bloqueadas. Habilítalas en configuración del navegador.</p>}
+
+<div className="card" style={{marginBottom:16}}>
+<div style={{textAlign:"center",marginBottom:16}}>
+<div style={{fontSize:36,marginBottom:10}}>📅</div>
+<h3 style={{fontSize:16,fontWeight:600,marginBottom:8}}>Sincronizar con calendario</h3>
+<p style={{fontSize:13,color:"#888",lineHeight:1.6,maxWidth:320,margin:"0 auto 16px"}}>Agrega los recordatorios al calendario del teléfono. Las alertas suenan aunque la pantalla esté bloqueada.</p>
 </div>
+<div style={{display:"flex",flexDirection:"column",gap:8}}>
+{curPhase&&curPhase!==PHASES.SURGERY&&curPhase!==PHASES.DONE&&curPhase!==PHASES.FUTURE&&(
+<button className="btn-primary" onClick={generatePhaseICS} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+<span>Descargar fase actual</span>
+<span style={{fontSize:11,opacity:0.8,fontWeight:400}}>({PHASE_META[curPhase].label})</span>
+</button>)}
+<button onClick={generateICS} style={{width:"100%",padding:"14px",fontSize:14,fontWeight:600,fontFamily:"'Outfit',sans-serif",border:"1.5px solid #7F77DD",borderRadius:10,background:"transparent",color:"#7F77DD",cursor:"pointer"}}>Descargar todo el proceso</button>
+</div>
+<div style={{marginTop:12,padding:"10px 14px",background:"#F5F5F3",borderRadius:10,fontSize:11,color:"#888",lineHeight:1.6}}>
+<strong style={{color:"#666"}}>Cada evento incluye:</strong> nombre de la comida, fase, y alarma 5 min antes. La hidratación suena en el momento exacto. Si cambias la fecha de cirugía, descarga de nuevo para actualizar.
+</div>
+</div>
+
+<div className="card" style={{textAlign:"center",marginBottom:16}}>
+<div style={{fontSize:28,marginBottom:8}}>{remOn?"🔔":"🔕"}</div>
+<h3 style={{fontSize:14,fontWeight:600,marginBottom:6}}>Recordatorios en la app</h3>
+<p style={{fontSize:12,color:"#888",lineHeight:1.5,maxWidth:300,margin:"0 auto 12px"}}>Solo funcionan con la app abierta en pantalla. Complementarios al calendario.</p>
+{!remOn?<button onClick={startRem} style={{padding:"10px 22px",fontSize:13,fontWeight:600,fontFamily:"'Outfit',sans-serif",border:"1.5px solid #CCC",borderRadius:10,background:"transparent",color:"#666",cursor:"pointer"}}>Activar</button>:
+<button onClick={stopRem} style={{padding:"10px 22px",fontSize:13,fontWeight:600,fontFamily:"'Outfit',sans-serif",border:"1.5px solid #E24B4A",borderRadius:10,background:"transparent",color:"#E24B4A",cursor:"pointer"}}>Desactivar</button>}
+{notifPerm==="denied"&&<p style={{fontSize:11,color:"#E24B4A",marginTop:8}}>Notificaciones bloqueadas en el navegador.</p>}
+</div>
+
 {curPhase&&getMeals(curPhase).length>0&&(<div>
 <div className="section-title">Horarios de hoy ({dayLabel(dayOff)})</div>
-{getMeals(curPhase).map((m,i)=>{const nm=now.getHours()*60+now.getMinutes();const[mh,mm]=m.time.split(":").map(Number);const mt=mh*60+mm;const isPast=nm>mt+30;const isNow=Math.abs(nm-mt)<=30;
-return(<div key={i} className={"sched-row"+(isNow?" now":"")+(isPast?" past":"")}>
-<span className="mono" style={{fontSize:12,color:isNow?"#534AB7":"#999",fontWeight:500,width:44}}>{m.time}</span>
-<span style={{fontSize:13,fontWeight:isNow?600:400,color:isNow?"#3C3489":undefined,flex:1}}>{m.name}</span>
-{isNow&&<span style={{fontSize:9,background:"#7F77DD",color:"#FFF",padding:"2px 6px",borderRadius:4,fontWeight:600}}>AHORA</span>}
-</div>)})}
-<div style={{borderTop:"1px solid #EEEEE8",marginTop:10,paddingTop:10}}>
-<div style={{fontSize:12,fontWeight:500,color:"#378ADD",marginBottom:6}}>Hidratación</div>
-<div style={{display:"flex",flexWrap:"wrap",gap:4}}>{HYD_TIMES.map((t,i)=>{const nm=now.getHours()*60+now.getMinutes();const[hh,hm]=t.split(":").map(Number);const isPast=nm>hh*60+hm+30;const isNow=Math.abs(nm-(hh*60+hm))<=30;
-return <div key={i} className="mono" style={{display:"inline-block",padding:"3px 10px",borderRadius:6,fontSize:12,background:isNow?"#E6F1FB":"#F5F5F3",color:isNow?"#185FA5":(isPast?"#CCC":"#888"),fontWeight:isNow?600:400}}>{t}</div>})}</div>
-</div></div>)}
+{(()=>{
+const todayMeals=getMeals(curPhase);
+const todayHyds=getHydTimes(curPhase);
+const sched=[];
+todayMeals.forEach(m=>sched.push({time:m.time,label:m.name,type:"meal"}));
+todayHyds.forEach(t=>sched.push({time:t,label:"Hidratación",type:"hyd"}));
+sched.sort((a,b)=>a.time.localeCompare(b.time));
+return sched.map((s,i)=>{const nm=now.getHours()*60+now.getMinutes();const[sh,sm]=s.time.split(":").map(Number);const st=sh*60+sm;const isPast=nm>st+30;const isNow=Math.abs(nm-st)<=30;
+const isHyd=s.type==="hyd";
+return(<div key={i} className={"sched-row"+(isNow?" now":"")+(isPast?" past":"")} style={isHyd?{opacity:isPast?0.4:0.75}:{}}>
+<span className="mono" style={{fontSize:12,color:isNow?(isHyd?"#185FA5":"#534AB7"):"#999",fontWeight:500,width:44}}>{s.time}</span>
+<span style={{fontSize:isHyd?12:13,fontWeight:isNow?600:400,color:isNow?(isHyd?"#185FA5":"#3C3489"):(isHyd?"#378ADD":undefined),flex:1}}>{isHyd?"💧 ":""}{s.label}</span>
+{isNow&&<span style={{fontSize:9,background:isHyd?"#378ADD":"#7F77DD",color:"#FFF",padding:"2px 6px",borderRadius:4,fontWeight:600}}>AHORA</span>}
+</div>)})})()}
 </div>)}
 
 <div className="bottom-nav">
